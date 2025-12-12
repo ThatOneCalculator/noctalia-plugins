@@ -19,24 +19,26 @@ Rectangle {
     property var cfg: pluginApi?.pluginSettings || ({})
     property var defaults: pluginApi?.manifest?.metadata?.defaultSettings || ({})
 
-    property string arrowType: cfg.arrowType || defaults.arrowType
-    property int minWidth: cfg.minWidth || defaults.minWidth
+    property string arrowType: cfg.arrowType || defaults.arrowType || "chevron"
+    property int minWidth: cfg.minWidth || defaults.minWidth || 0
 
     property bool useCustomColors: cfg.useCustomColors || defaults.useCustomColors
     property bool showNumbers: cfg.showNumbers || defaults.showNumbers
     property bool forceMegabytes: cfg.forceMegabytes || defaults.forceMegabytes
 
     property color colorSilent: root.useCustomColors && (cfg.colorSilent || defaults.colorSilent) || Color.mSurfaceVariant
-    property color colorTx: cfg.colorTx || defaults.colorTx || Color.mSecondary
-    property color colorRx: cfg.colorRx || defaults.colorRx || Color.mPrimary
-    property color colorText: cfg.colorText || defaults.colorText || Qt.alpha(Color.mOnSurfaceVariant, 0.3)
+    property color colorTx: root.useCustomColors && (cfg.colorTx || defaults.colorTx) || Color.mSecondary
+    property color colorRx: root.useCustomColors && (cfg.colorRx || defaults.colorRx) || Color.mPrimary
+    property color colorText: root.useCustomColors && (cfg.colorText || defaults.colorText) || Qt.alpha(Color.mOnSurfaceVariant, 0.3)
 
-    property int byteThresholdActive: cfg.byteThresholdActive || defaults.byteThresholdActive
-    property real fontSizeModifier: cfg.fontSizeModifier || defaults.fontSizeModifier
-    property real iconSizeModifier: cfg.iconSizeModifier || defaults.iconSizeModifier
-    property real spacingInbetween: cfg.spacingInbetween || defaults.spacingInbetween
+    property int byteThresholdActive: cfg.byteThresholdActive || defaults.byteThresholdActive || 1024
+    property real fontSizeModifier: cfg.fontSizeModifier || defaults.fontSizeModifier || 1
+    property real iconSizeModifier: cfg.iconSizeModifier || defaults.iconSizeModifier || 1
+    property real spacingInbetween: cfg.spacingInbetween || defaults.spacingInbetween || 1
 
     property string barPosition: Settings.data.bar.position || "top"
+    property string barDensity: Settings.data.bar.density || "compact"
+    property bool barIsSpacious: barDensity != "mini"
     property bool barIsVertical: barPosition === "left" || barPosition === "right"
 
     color: cfg.backgroundColor || defaults.backgroundColor || "transparent"
@@ -50,18 +52,20 @@ Rectangle {
 
     RowLayout {
         id: contentRow
+
         anchors.centerIn: parent
         spacing: Style.marginS
 
         Column {
-            visible: root.showNumbers
+            visible: root.showNumbers && barIsSpacious && !barIsVertical
+
             spacing: root.spacingInbetween
 
             NText {
                 visible: true
                 text: convertBytes(root.txSpeed)
                 color: root.colorText
-                pointSize: Style.fontSizeS * root.fontSizeModifier
+                pointSize: Style.fontSizeXS * 0.75 * root.fontSizeModifier
                 font.weight: Font.Medium
                 horizontalAlignment: Text.AlignLeft
             }
@@ -70,7 +74,7 @@ Rectangle {
                 visible: true
                 text: convertBytes(root.rxSpeed)
                 color: root.colorText
-                pointSize: Style.fontSizeS * root.fontSizeModifier
+                pointSize: Style.fontSizeXS * 0.75 * root.fontSizeModifier
                 font.weight: Font.Medium
                 horizontalAlignment: Text.AlignLeft
             }
@@ -102,7 +106,7 @@ Rectangle {
         let value;
         let unit;
 
-        if ((bytesPerSecond < MB) & !root.forceMegabytes) {
+        if (bytesPerSecond < MB & !root.forceMegabytes) {
             value = bytesPerSecond / KB;
             unit = "KB";
         } else {

@@ -6,8 +6,6 @@ import qs.Widgets
 ColumnLayout {
     id: root
 
-    readonly property int labelPadding: 15
-
     property var pluginApi: null
 
     property var cfg: pluginApi?.pluginSettings || ({})
@@ -30,6 +28,11 @@ ColumnLayout {
     property real iconSizeModifier: cfg.iconSizeModifier || defaults.iconSizeModifier
     property real spacingInbetween: cfg.spacingInbetween || defaults.spacingInbetween
 
+    property string barPosition: Settings.data.bar.position || "top"
+    property string barDensity: Settings.data.bar.density || "compact"
+    property bool barIsSpacious: root.barDensity != "mini"
+    property bool barIsVertical: root.barPosition === "left" || barPosition === "right"
+
     spacing: Style.marginL
 
     Component.onCompleted: {
@@ -41,38 +44,41 @@ ColumnLayout {
         return isNaN(v) ? defaultValue : v;
     }
 
-    NHeader {
-        label: "Network Indicator"
-        description: "Configure the Network Indicator plugin settings."
-    }
+    // ---------- General ----------
 
-    // ---------- General settings ----------
+    RowLayout {
+        NComboBox {
+            label: "Icon Type"
+            description: "Choose the icon style used for the TX/RX indicators."
 
-    NComboBox {
-        label: "Icon Type"
-        description: "Choose the icon style used for the TX/RX indicators."
+            model: [
+                {
+                    "key": "arrow",
+                    "name": "arrow"
+                },
+                {
+                    "key": "arrow-narrow",
+                    "name": "arrow-narrow"
+                },
+                {
+                    "key": "caret",
+                    "name": "caret"
+                },
+                {
+                    "key": "chevron",
+                    "name": "chevron"
+                },
+            ]
 
-        model: [
-            {
-                "key": "arrow",
-                "name": "arrow"
-            },
-            {
-                "key": "arrow-narrow",
-                "name": "arrow-narrow"
-            },
-            {
-                "key": "caret",
-                "name": "caret"
-            },
-            {
-                "key": "chevron",
-                "name": "chevron"
-            },
-        ]
+            currentKey: root.arrowType
+            onSelected: key => root.arrowType = key
+        }
 
-        currentKey: root.arrowType
-        onSelected: key => root.arrowType = key
+        NIcon {
+            icon: root.arrowType + "-up"
+            color: Color.mPrimary
+            pointSize: Style.fontSizeL * 2
+        }
     }
 
     NTextInput {
@@ -94,6 +100,8 @@ ColumnLayout {
     NToggle {
         label: "Show Values"
         description: "Display the current RX/TX speeds as numbers."
+        visible: barIsSpacious && !barIsVertical
+
         checked: root.showNumbers
         onToggled: function (checked) {
             if (checked) {
@@ -107,6 +115,8 @@ ColumnLayout {
     NToggle {
         label: "Force megabytes (MB)"
         description: "Show all traffic values in MB instead of switching to KB for low usage."
+        visible: barIsSpacious && !barIsVertical
+
         checked: root.forceMegabytes
         onToggled: function (checked) {
             if (checked) {
@@ -158,7 +168,7 @@ ColumnLayout {
         NValueSlider {
             Layout.fillWidth: true
             from: 0.5
-            to: 1.0
+            to: 1.5
             stepSize: 0.05
             value: root.fontSizeModifier
             onMoved: value => root.fontSizeModifier = value
@@ -177,7 +187,7 @@ ColumnLayout {
 
         NValueSlider {
             Layout.fillWidth: true
-            from: 0
+            from: 0.5
             to: 1.5
             stepSize: 0.05
             value: root.iconSizeModifier
@@ -193,7 +203,7 @@ ColumnLayout {
         Layout.bottomMargin: Style.marginL
     }
 
-    // ---------- Color settings ----------
+    // ---------- Colors ----------
 
     NToggle {
         label: "Custom Colors"
@@ -228,7 +238,6 @@ ColumnLayout {
             NLabel {
                 label: "RX Active"
                 description: "Set the download (RX) icon color when above the threshold."
-                Layout.alignment: Qt.AlignTop
             }
 
             NColorPicker {
@@ -241,7 +250,6 @@ ColumnLayout {
             NLabel {
                 label: "RX/TX Inactive"
                 description: "Set the icon color when traffic is below the threshold."
-                Layout.alignment: Qt.AlignTop
             }
 
             NColorPicker {
@@ -254,7 +262,6 @@ ColumnLayout {
             NLabel {
                 label: "Text"
                 description: "Set the text color used for both RX and TX values."
-                Layout.alignment: Qt.AlignTop
             }
 
             NColorPicker {
@@ -271,8 +278,6 @@ ColumnLayout {
             Logger.e("NetworkIndicator", "Cannot save settings: pluginApi is null");
             return;
         }
-
-        Logger.e("NetworkIndicator", "{}", root.forceMegabytes);
 
         pluginApi.pluginSettings.useCustomColors = root.useCustomColors;
         pluginApi.pluginSettings.showNumbers = root.showNumbers;
