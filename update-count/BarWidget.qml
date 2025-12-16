@@ -19,7 +19,8 @@ Rectangle {
     property string configuredTerminal: pluginApi?.pluginSettings.configuredTerminal || pluginApi?.manifest?.metadata.defaultSettings?.configuredTerminal
     property int count: checkForUpdates() || 0
     property bool hideOnZero: pluginApi?.pluginSettings.hideOnZero || pluginApi?.manifest?.metadata.defaultSettings?.hideOnZero
-
+    
+    readonly property bool isVisible: (root.count > 0) || !root.hideOnZero
     readonly property string barPosition: Settings.data.bar.position
     readonly property bool isVertical: barPosition === "left" || barPosition === "right"
     readonly property string updateScriptDir: (pluginApi?.pluginDir || Settings.configDir + "/plugins/update-count") + "/scripts"
@@ -29,7 +30,10 @@ Rectangle {
 
     color: root.hovered ? Color.mHover : Style.capsuleColor
     radius: Style.radiusM
-    visible: (root.count > 0) || !root.hideOnZero
+    visible: root.isVisible
+    
+    // also set opacity to zero when invisible as we use opacity to hide the barWidgetLoader
+    opacity: root.isVisible ? 1.0 : 0.0
 
     function checkForUpdates() {
         updateDataHandler.running = true;
