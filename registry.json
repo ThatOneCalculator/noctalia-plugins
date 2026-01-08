@@ -217,13 +217,13 @@
     {
       "id": "steam-price-watcher",
       "name": "Steam Price Watcher",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": "Lokize",
       "description": "Monitor Steam game prices and get notified when they reach your target price",
       "minNoctaliaVersion": "3.6.0",
       "license": "MIT",
       "tags": [],
-      "lastUpdated": "2026-01-07T21:51:09-05:00"
+      "lastUpdated": "2026-01-08T08:07:26-03:00"
     },
     {
       "id": "todo",
